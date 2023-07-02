@@ -253,6 +253,20 @@ files = [
 ]
 
 [[package]]
+name = "photostation"
+version = "0.1.5"
+description = "A Python API to communicate with Photo Station running on Synology NAS."
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "photostation-0.1.5.tar.gz", hash = "sha256:3653f272f63488321c0310d0a290f59d4468a98d117c521e174ce801fe5947dc"},
+]
+
+[package.dependencies]
+requests = ">=1.2"
+
+[[package]]
 name = "pluggy"
 version = "1.2.0"
 description = "plugin and hook calling mechanisms for python"
@@ -480,4 +494,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "484d29c43234edc54b986d438684b3eeb672fa20ed8d395ccc0ee03b98ad1b10"
+content-hash = "c59a2477138afef5d0b51ef380bc3064f92d966c7e76d05918744f4d31e7a241"
