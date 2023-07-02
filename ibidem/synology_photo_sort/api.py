@@ -17,7 +17,6 @@ class Synology(SynologySession):
         self._password = password
         super().__init__(url)
         self._login()
-        LOG.debug("API info: \n%s", pformat(self.info))
 
     def _login(self):
         LOG.debug("Logging in user %s", self._username)

@@ -35,6 +35,7 @@ class Album(Item):
             "offset": 0,
             "type": type,
             "id": self.id,
+            "additional": "photo_exif",
         }
         total = -1
         offset = 0
