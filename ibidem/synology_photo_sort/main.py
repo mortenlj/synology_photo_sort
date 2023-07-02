@@ -31,6 +31,7 @@ def main():
     LOG.info("Starting sort process with %s", settings)
 
     photo_station = PhotoStation(settings.dsm_url, settings.dsm_user, settings.dsm_pass.get_secret_value())
+    LOG.info("Authentication status: %r", photo_station._api.authenticated())
     album = photo_station.get_album(settings.album)
     LOG.info("Listing children in album %s", album)
     for child in album.list_children():

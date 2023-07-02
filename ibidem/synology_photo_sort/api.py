@@ -1,6 +1,6 @@
 import logging
+from pprint import pformat
 
-import requests
 from photostation.session import SynologySession
 
 LOG = logging.getLogger(__name__)
@@ -11,21 +11,13 @@ class Api(object):
     Auth = "SYNO.PhotoStation.Auth"
 
 
-class SynologyAuth(requests.auth.AuthBase):
-    def __init__(self, token=None):
-        self.token = token
-
-    def __call__(self, r):
-        r.headers["X-SYNO-TOKEN"] = self.token
-        return r
-
-
 class Synology(SynologySession):
     def __init__(self, url, username, password):
         self._username = username
         self._password = password
         super().__init__(url)
-        self._auth = self._login()
+        self._login()
+        LOG.debug("API info: \n%s", pformat(self.info))
 
     def _login(self):
         LOG.debug("Logging in user %s", self._username)
@@ -38,10 +30,8 @@ class Synology(SynologySession):
         }
 
         self.query(Api.Auth, params)
-        token = self.session.cookies.get("PHPSESSID")
-        return SynologyAuth(token)
 
-    def _authenticated(self):
+    def authenticated(self):
         LOG.debug('check authentication status')
         check = self.query(Api.Auth, {'method': 'checkauth'})
         return check['permission']['manage']

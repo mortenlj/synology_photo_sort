@@ -1,34 +1,57 @@
 import logging
-from pprint import pformat
-
-# TODO: Replace this with own implementation :(
-from photostation.service import PhotoStationPhoto
 
 from ibidem.synology_photo_sort.api import Synology, Api
 
 LOG = logging.getLogger(__name__)
 
 
-class Photo(object):
-    def __init__(self, psphoto: PhotoStationPhoto):
-        self._psphoto = psphoto
-
-    def __repr__(self):
-        return repr(self._psphoto)
-
-
-class Album(object):
-    def __init__(self, data):
+class Item(object):
+    def __init__(self, api, data):
+        self._api = api
         self._data = data
 
-    def list_children(self) -> list["Album"]:
-        pass
-
-    def list_photos(self) -> list[Photo]:
-        pass
+    def __getattr__(self, item):
+        try:
+            return self._data[item]
+        except KeyError as e:
+            raise AttributeError(item)
 
     def __repr__(self):
-        return repr(self._data)
+        parts = []
+        for key, value in self._data.items():
+            parts.append(f"{key}={value}")
+        return f"{self.__class__.__name__}({', '.join(parts)})"
+
+
+class Photo(Item):
+    pass
+
+
+class Album(Item):
+    def _list_items(self, type):
+        params = {
+            "method": "list",
+            "limit": 100,
+            "offset": 0,
+            "type": type,
+            "id": self.id,
+        }
+        total = -1
+        offset = 0
+        while total != offset:
+            params["offset"] = offset
+            data = self._api.query(Api.Album, params)
+            total, offset = data["total"], data["offset"]
+            LOG.debug(f"total {total} vs offset {offset}")
+            yield from data["items"]
+
+    def list_children(self) -> list["Album"]:
+        for item in self._list_items("album"):
+            yield Album(self._api, item)
+
+    def list_photos(self) -> list[Photo]:
+        for item in self._list_items("photo"):
+            yield Photo(self._api, item)
 
 
 def album_id(album):
@@ -48,5 +71,4 @@ class PhotoStation(object):
             "method": "getinfo",
             "id": album_id(album),
         })
-        LOG.debug("Album data: %s", pformat(data))
-        return Album(data)
+        return Album(self._api, data["items"][0])
