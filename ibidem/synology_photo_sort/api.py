@@ -9,6 +9,7 @@ LOG = logging.getLogger(__name__)
 class Api(object):
     Album = "SYNO.PhotoStation.Album"
     Auth = "SYNO.PhotoStation.Auth"
+    Photo = "SYNO.PhotoStation.Photo"
 
 
 class Synology(SynologySession):
@@ -29,8 +30,10 @@ class Synology(SynologySession):
         }
 
         self.query(Api.Auth, params)
+        if not self._authenticated():
+            raise RuntimeError("Failed to get authenticated")
 
-    def authenticated(self):
+    def _authenticated(self):
         LOG.debug('check authentication status')
         check = self.query(Api.Auth, {'method': 'checkauth'})
         return check['permission']['manage']
