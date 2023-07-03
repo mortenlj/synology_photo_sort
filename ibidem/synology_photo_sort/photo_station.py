@@ -14,7 +14,10 @@ class Item(object):
         try:
             return self._data[item]
         except KeyError as e:
-            raise AttributeError(item)
+            try:
+                return self._data["info"][item]
+            except KeyError as e:
+                raise AttributeError(item)
 
     def __repr__(self):
         parts = []
@@ -24,10 +27,22 @@ class Item(object):
 
 
 class Photo(Item):
-    pass
+    def move(self, target_album):
+        self._api.query(Api.Photo, {
+            "method": "copy",
+            "id": self.id,
+            "sharepath": target_album.id,
+            "mode": "move",
+            "duplicate": "rename",
+        })
 
 
 class Album(Item):
+
+    def __init__(self, api, data):
+        super().__init__(api, data)
+        self._name2id = {}
+
     def _list_items(self, type):
         params = {
             "method": "list",
@@ -48,11 +63,41 @@ class Album(Item):
 
     def list_children(self) -> list["Album"]:
         for item in self._list_items("album"):
-            yield Album(self._api, item)
+            LOG.debug("Received item %r", item)
+            album = Album(self._api, item)
+            self._name2id[album.name] = album.id
+            yield album
 
     def list_photos(self) -> list[Photo]:
         for item in self._list_items("photo"):
             yield Photo(self._api, item)
+
+    def get(self, name: str, create=True) -> "Album":
+        if name in self._name2id:
+            LOG.debug("Getting known album %s with id %s", name, self._name2id[name])
+            data = self._api.query(Api.Album, {
+                "method": "getinfo",
+                "id": self._name2id[name]
+            })
+            return Album(self._api, data["items"][0])
+        else:
+            LOG.debug("Searching through all children for album with name %s", name)
+            for child in self.list_children():
+                LOG.debug("Comparing %r with %r", child.name, name)
+                if child.name == name:
+                    LOG.debug("Found album with name %s: %r", name, child)
+                    return child
+        if create:
+            LOG.debug("Creating new album named %s as child of %r", name, self)
+            self._api.query(Api.Album, {
+                "method": "create",
+                "name": name,
+                "id": self.id,
+                "title": name,
+                "type": "private",
+            })
+            return self.get(name, create=False)
+        raise RuntimeError("Unable to find or create album %s", name)
 
 
 def album_id(album):

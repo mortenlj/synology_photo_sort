@@ -14,6 +14,7 @@ LOG = logging.getLogger(__name__)
 class Patterns:
     ISO_DATE_NUM = re.compile(r"(20\d{2})[01]\d[0-3]\d\d{3}")
     DATE_NUM = re.compile(r"[0-3]\d[01]\d(20\d{2})\d{3}")
+    DATE_STRING = re.compile(r"\d\d\._[a-z]+_(20\d\d)_\d{3}")
 
 
 def _init_logging():
@@ -25,11 +26,9 @@ def place_photo(photo, album):
     info = photo.info
     target = _extract_target_year(info)
     if target:
-        # LOG.debug("Targetting %04d for %r", target, photo)
-        return 1
-    else:
-        # LOG.error("Failed to extract year from %r", photo)
-        return 0
+        LOG.debug("Targeting %04d for %r", target, photo)
+        sub_album = album.get(str(target))
+        photo.move(sub_album)
 
 
 def _extract_target_year(info):
@@ -39,10 +38,12 @@ def _extract_target_year(info):
             return taken.date().year
     except arrow.parser.ParserError:
         pass
-    filename = info.get("title")
-    if m := Patterns.ISO_DATE_NUM.match(filename):
+    title = info.get("title")
+    if m := Patterns.ISO_DATE_NUM.match(title):
         return int(m.group(1))
-    if m := Patterns.DATE_NUM.match(filename):
+    if m := Patterns.DATE_NUM.match(title):
+        return int(m.group(1))
+    if m := Patterns.DATE_STRING.match(title):
         return int(m.group(1))
     try:
         created = arrow.get(info["createdate"])
@@ -53,10 +54,8 @@ def _extract_target_year(info):
 
 
 def sort_album(album):
-    success = 0
     for photo in album.list_photos():
-        success += place_photo(photo, album)
-    LOG.info("Placed %d photos", success)
+        place_photo(photo, album)
 
 
 def main():
