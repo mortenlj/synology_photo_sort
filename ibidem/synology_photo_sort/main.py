@@ -21,28 +21,16 @@ def _init_logging():
     init_logging(debug=True)
 
 
-def place_photo(photo, album):
-    """Figure out appropriate year for `photo`, and move it to correct child of `album`"""
-    info = photo.info
+def place_media(media, album):
+    """Figure out appropriate year for `media`, and move it to correct child of `album`"""
+    info = media.info
     target = _extract_target_year(info)
     if target:
-        LOG.debug("Targeting %04d for %r", target, photo)
+        LOG.debug("Targeting %04d for %r", target, media)
         sub_album = album.get(str(target))
-        photo.move(sub_album)
+        media.move(sub_album)
     else:
-        LOG.info("Failed to find year for %r", photo)
-
-
-def place_video(video, album):
-    """Figure out appropriate year for `video`, and move it to correct child of `album`"""
-    info = video.info
-    target = _extract_target_year(info)
-    if target:
-        LOG.debug("Targeting %04d for %r", target, video)
-        sub_album = album.get(str(target))
-        video.move(sub_album)
-    else:
-        LOG.info("Failed to find year for %r", video)
+        LOG.info("Failed to find year for %r", media)
 
 
 def _extract_target_year(info):
@@ -68,10 +56,8 @@ def _extract_target_year(info):
 
 
 def sort_album(album):
-    for photo in album.list_photos():
-        place_photo(photo, album)
-    for video in album.list_videos():
-        place_video(video, album)
+    for media in album.list_media():
+        place_media(media, album)
 
 
 def main():

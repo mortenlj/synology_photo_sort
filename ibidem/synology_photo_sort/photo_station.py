@@ -27,7 +27,7 @@ class Item(object):
         return f"{self.__class__.__name__}({', '.join(parts)})"
 
 
-class Photo(Item):
+class Media(Item):
     def move(self, target_album):
         if self._dry_run:
             LOG.debug("Would move %r to %r", self, target_album)
@@ -71,13 +71,9 @@ class Album(Item):
             self._name2id[album.name] = album.id
             yield album
 
-    def list_photos(self) -> list[Photo]:
-        for item in self._list_items("photo"):
-            yield Photo(self._api, item, self._dry_run)
-
-    def list_videos(self) -> list[Photo]:
-        for item in self._list_items("video"):
-            yield Photo(self._api, item, self._dry_run)
+    def list_media(self) -> list[Media]:
+        for item in self._list_items("photo,video"):
+            yield Media(self._api, item, self._dry_run)
 
     def get(self, name: str, create=True) -> "Album":
         if name in self._name2id:
