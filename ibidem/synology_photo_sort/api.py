@@ -1,5 +1,4 @@
 import logging
-from pprint import pformat
 
 from photostation.session import SynologySession
 

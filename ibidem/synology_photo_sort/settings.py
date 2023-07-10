@@ -8,6 +8,7 @@ from pydantic.env_settings import SettingsSourceCallable
 def cli_settings(_: BaseSettings) -> Dict[str, Any]:
     parser = argparse.ArgumentParser()
     parser.add_argument("album", help="Name of the album to sort")
+    parser.add_argument("--dry-run", action="store_true", help="Don't actually move or create anything")
     options = parser.parse_args()
     return options.__dict__
 
@@ -17,6 +18,7 @@ class Settings(BaseSettings):
     dsm_pass: SecretStr
     dsm_url: HttpUrl
     album: str
+    dry_run: bool
 
     class Config:
         @classmethod
